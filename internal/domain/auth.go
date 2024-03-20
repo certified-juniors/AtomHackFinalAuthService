@@ -58,6 +58,7 @@ type AuthUsecase interface {
 	GetUserID(token string) (string, error)
 	GenerateJWT(email string) (string, error)
 	GetByID(id int) (User, error)
+	AddCodeByID(id int, code string) error
 }
 
 type AuthRepository interface {
@@ -71,4 +72,5 @@ type SessionRepository interface {
 	Add(session Session) error
 	DeleteByToken(token string) error
 	GetUserID(token string) (string, error)
+	AddCodeByID(id int, code string) error
 }

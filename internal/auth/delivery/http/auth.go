@@ -1,9 +1,10 @@
 package http
 
 import (
+	"crypto/rand"
 	"encoding/json"
-	"fmt"
 	"github.com/certified-juniors/AtomHack/internal/auth/delivery/smtp"
+	"math/big"
 	"net/http"
 	"net/mail"
 	"strconv"
@@ -31,10 +32,7 @@ func NewAuthHandler(authMwRouter *mux.Router, mainRouter *mux.Router, u domain.A
 	authMwRouter.HandleFunc("/v1/auth/check", handler.CheckAuth).Methods(http.MethodPost, http.MethodOptions)
 	authMwRouter.HandleFunc("/v1/auth/logout", handler.Logout).Methods(http.MethodPost, http.MethodOptions)
 	authMwRouter.HandleFunc("/v1/auth/me", handler.Me).Methods(http.MethodGet, http.MethodOptions)
-	mainRouter.HandleFunc("/v1/auth/send", func(w http.ResponseWriter, r *http.Request) {
-		s := smtp.NewSMTP()
-		fmt.Println(s.SendMailToClient("title", "345677", "ax.chinaev@yandex.ru"))
-	}).Methods(http.MethodPost, http.MethodOptions)
+	mainRouter.HandleFunc("/v1/auth/confirm/{id}", handler.Verify).Methods(http.MethodPost, http.MethodOptions)
 }
 
 // Login godoc
@@ -179,19 +177,39 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, _, err := a.AuthUsecase.Login(domain.Credentials{Email: user.Email, Password: user.Password})
+	code, err := generateRandomNumber()
 	if err != nil {
 		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
-		logs.LogError(logs.Logger, "auth/http", "Register.login", err, "Failed to login")
+		logs.LogError(logs.Logger, "auth/http", "Register.register", err, "Failed to generate code")
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    session.Token,
-		Expires:  session.ExpiresAt,
-		Path:     "/",
-		HttpOnly: true,
-	})
+
+	err = smtp.SendMailToClient("Код подтверждения", code, user.Email)
+	if err != nil {
+		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+		logs.LogError(logs.Logger, "auth/http", "Register.register", err, "Failed to send code")
+		return
+	}
+
+	err = a.AuthUsecase.AddCodeByID(id, code)
+	if err != nil {
+		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+		logs.LogError(logs.Logger, "auth/http", "Register.register", err, "Failed to save code")
+		return
+	}
+	//session, _, err := a.AuthUsecase.Login(domain.Credentials{Email: user.Email, Password: user.Password})
+	//if err != nil {
+	//	domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+	//	logs.LogError(logs.Logger, "auth/http", "Register.login", err, "Failed to login")
+	//	return
+	//}
+	//http.SetCookie(w, &http.Cookie{
+	//	Name:     "session_token",
+	//	Value:    session.Token,
+	//	Expires:  session.ExpiresAt,
+	//	Path:     "/",
+	//	HttpOnly: true,
+	//})
 
 	domain.WriteResponse(
 		w,
@@ -200,6 +218,28 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		},
 		http.StatusOK,
 	)
+}
+
+// Verify godoc
+//
+//	@Summary		check getUserID
+//	@Description	check if user is authenticated
+//	@Tags			Auth
+//	@Success		204
+//	@Failure		400	{object}	object{err=string}
+//	@Failure		401	{object}	object{err=string}
+//	@Failure		409	{object}	object{err=string}
+//	@Failure		500	{object}	object{err=string}
+//	@Router			/api/v1/auth/check [post]
+func (a *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
+	auth, err := a.getUserID(r)
+	if auth != 0 {
+		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+		logs.LogError(logs.Logger, "http", "CheckAuth", err, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // CheckAuth godoc
@@ -257,6 +297,28 @@ func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		},
 		http.StatusOK,
 	)
+}
+
+func generateRandomNumber() (string, error) {
+	const digits = "0123456789"
+	const length = 6
+
+	var randomNumber string
+	for i := 0; i < length; i++ {
+		// Генерируем случайный индекс
+		randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
+		if err != nil {
+			return "", err
+		}
+
+		// Получаем случайную цифру по индексу
+		randomDigit := digits[randomIndex.Int64()]
+
+		// Добавляем цифру к случайной последовательности
+		randomNumber += string(randomDigit)
+	}
+
+	return randomNumber, nil
 }
 
 func (a *AuthHandler) getUserID(r *http.Request) (int, error) {

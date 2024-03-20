@@ -88,6 +88,19 @@ func (u *authUsecase) Register(user domain.User) (int, error) {
 	}
 }
 
+func (u *authUsecase) AddCodeByID(id int, code string) error {
+	if id <= 0 || code == "" {
+		return domain.ErrBadRequest
+	}
+
+	err := u.sessionRepo.AddCodeByID(id, code)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *authUsecase) GetByID(id int) (domain.User, error) {
 	if id == 0 {
 		return domain.User{}, domain.ErrBadRequest

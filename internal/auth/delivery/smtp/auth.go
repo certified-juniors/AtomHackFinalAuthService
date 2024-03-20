@@ -9,14 +9,14 @@ import (
 	"github.com/certified-juniors/AtomHack/internal/domain"
 )
 
-type Sender struct {
-}
+//type Sender struct {
+//}
+//
+//func NewSMTP() *Sender {
+//	return &Sender{}
+//}
 
-func NewSMTP() *Sender {
-	return &Sender{}
-}
-
-func (s *Sender) SendMailToClient(title, body string, clientEmail string) error {
+func SendMailToClient(title, body string, clientEmail string) error {
 	params := getParams()
 
 	conn, err := smtp.Dial(fmt.Sprintf("%s:%d", params.SmtpHost, params.SmtpPort))

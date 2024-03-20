@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"github.com/certified-juniors/AtomHack/internal/domain"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -23,6 +24,19 @@ func (s *sessionRedisRepository) Add(session domain.Session) error {
 
 	duration := session.ExpiresAt.Sub(time.Now())
 	err := s.client.Set(context.TODO(), session.Token, session.UserID, duration).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *sessionRedisRepository) AddCodeByID(id int, code string) error {
+	if code == "" || id <= 0 {
+		return domain.ErrBadRequest
+	}
+
+	err := s.client.Set(context.TODO(), strconv.Itoa(id), code, 24*time.Hour).Err()
 	if err != nil {
 		return err
 	}
