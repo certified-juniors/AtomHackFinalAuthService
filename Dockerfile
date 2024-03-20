@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-WORKDIR /app/cmd/film_lib
+WORKDIR /app/cmd/auth
 
 RUN go build -o main
 
@@ -16,6 +16,6 @@ FROM gcr.io/distroless/base-debian11 AS build-release-stage
 
 WORKDIR /
 
-COPY --from=build-stage /app/cmd/film_lib/main /main
+COPY --from=build-stage /app/cmd/auth/main /main
 
 ENTRYPOINT ["/main"]

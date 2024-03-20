@@ -9,12 +9,10 @@ definitions:
           type: integer
         type: array
     type: object
-  domain.User:
+  domain.UserWithoutId:
     properties:
       email:
         type: string
-      id:
-        type: integer
       middleName:
         type: string
       name:
@@ -179,7 +177,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/domain.User'
+          $ref: '#/definitions/domain.UserWithoutId'
       produces:
       - application/json
       responses:

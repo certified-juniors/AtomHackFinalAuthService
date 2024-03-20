@@ -243,7 +243,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/domain.User"
+                            "$ref": "#/definitions/domain.UserWithoutId"
                         }
                     }
                 ],
@@ -316,14 +316,11 @@ const docTemplate = `{
                 }
             }
         },
-        "domain.User": {
+        "domain.UserWithoutId": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string"
-                },
-                "id": {
-                    "type": "integer"
                 },
                 "middleName": {
                     "type": "string"

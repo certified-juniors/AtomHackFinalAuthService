@@ -155,7 +155,7 @@ func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Auth
 //	@Produce		json
 //	@Accept			json
-//	@Param			body	body		domain.User	true	"user credentials"
+//	@Param			body	body		domain.UserWithoutId	true	"user credentials"
 //	@Success		200		{object}	object{body=object{id=int}}
 //	@Failure		400		{object}	object{err=string}
 //	@Failure		403		{object}	object{err=string}
