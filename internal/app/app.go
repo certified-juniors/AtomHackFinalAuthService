@@ -37,6 +37,7 @@ func StartServer() {
 	defer rc.Close()
 
 	mainRouter := mux.NewRouter()
+	mainRouter.Use(middleware.CORS)
 
 	authMiddlewareRouter := mainRouter.PathPrefix("/api").Subrouter()
 
@@ -57,7 +58,6 @@ func StartServer() {
 
 	authMiddlewareRouter.Use(mw.IsAuth)
 	mainRouter.Use(accessLogger.AccessLogMiddleware)
-	mainRouter.Use(middleware.CORS)
 
 	serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
 	logs.Logger.Info("starting server at ", serverPort)
