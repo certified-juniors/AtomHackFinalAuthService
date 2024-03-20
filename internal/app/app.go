@@ -66,7 +66,7 @@ func StartServer() {
 	//logs.Logger.Info("starting server at ", serverPort)
 
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("HTTP_SERVER_PORT"), handlers.CORS(
-		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedOrigins([]string{"X-Requested-With", "Content-Type"}),
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"*"}),
 		handlers.AllowCredentials(),
