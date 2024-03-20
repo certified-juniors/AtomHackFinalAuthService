@@ -28,7 +28,7 @@ type Credentials struct {
 type User struct {
 	ID         int    `json:"id"`
 	Email      string `json:"email"`
-	Password   []byte `json:"password"`
+	Password   []byte `json:"password,omitempty"`
 	Name       string `json:"name"`
 	Surname    string `json:"surname"`
 	MiddleName string `json:"middleName"`
@@ -45,13 +45,15 @@ type AuthUsecase interface {
 	Login(credentials Credentials) (Session, int, error)
 	Logout(token string) error
 	Register(user User) (int, error)
-	IsAuth(token string) (bool, error)
+	GetUserID(token string) (string, error)
 	GenerateJWT() (string, error)
 	ParseJWT(tokenString string) (string, error)
+	GetByID(id int) (User, error)
 }
 
 type AuthRepository interface {
 	GetByEmail(email string) (User, error)
+	GetByID(id int) (User, error)
 	AddUser(user User) (int, error)
 	UserExists(email string) (bool, error)
 }
@@ -59,5 +61,5 @@ type AuthRepository interface {
 type SessionRepository interface {
 	Add(session Session) error
 	DeleteByToken(token string) error
-	SessionExists(token string) (bool, error)
+	GetUserID(token string) (string, error)
 }

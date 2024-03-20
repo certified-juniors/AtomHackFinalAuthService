@@ -43,15 +43,15 @@ func (s *sessionRedisRepository) DeleteByToken(token string) error {
 	return nil
 }
 
-func (s *sessionRedisRepository) SessionExists(token string) (bool, error) {
+func (s *sessionRedisRepository) GetUserID(token string) (string, error) {
 	if token == "" {
-		return false, domain.ErrInvalidToken
+		return "", domain.ErrInvalidToken
 	}
 
-	exists, err := s.client.Exists(context.Background(), token).Result()
+	id, err := s.client.Get(context.Background(), token).Result()
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
-	return exists == 1, nil
+	return id, nil
 }

@@ -32,12 +32,12 @@ func (m *AuthMiddleware) IsAuth(next http.Handler) http.Handler {
 		}
 
 		sessionToken := c.Value
-		exists, err := m.authUsecase.IsAuth(sessionToken)
+		id, err := m.authUsecase.GetUserID(sessionToken)
 		if err != nil {
 			domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
 			return
 		}
-		if !exists {
+		if id == "" {
 			domain.WriteError(w, domain.ErrUnauthorized.Error(), http.StatusUnauthorized)
 			return
 		}

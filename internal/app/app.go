@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	_ "github.com/certified-juniors/AtomHack/docs"
+	"github.com/certified-juniors/AtomHack/docs"
 	auth_http "github.com/certified-juniors/AtomHack/internal/auth/delivery/http"
 	auth_postgres "github.com/certified-juniors/AtomHack/internal/auth/repository/postgresql"
 	auth_redis "github.com/certified-juniors/AtomHack/internal/auth/repository/redis"
@@ -36,7 +36,6 @@ func StartServer() {
 	defer rc.Close()
 
 	mainRouter := mux.NewRouter()
-	mainRouter.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	authMiddlewareRouter := mainRouter.PathPrefix("/api").Subrouter()
 
@@ -48,6 +47,9 @@ func StartServer() {
 	au := auth_usecase.NewAuthUsecase(ar, sr, jwtSecret)
 
 	auth_http.NewAuthHandler(authMiddlewareRouter, mainRouter, au)
+
+	docs.SwaggerInfo.Host = os.Getenv("SWAGGER_ADDR")
+	mainRouter.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	mw := middleware.NewAuth(au)
 

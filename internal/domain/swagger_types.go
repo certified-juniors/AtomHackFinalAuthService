@@ -9,3 +9,11 @@ type UserWithoutId struct {
 	MiddleName string `json:"middleName"`
 	Role       string `json:"role"`
 }
+
+type UserWithoutPassword struct {
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	MiddleName string `json:"middleName"`
+	Role       string `json:"role"`
+}

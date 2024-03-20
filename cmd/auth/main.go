@@ -12,7 +12,6 @@ import "github.com/certified-juniors/AtomHack/internal/app"
 
 //	@license.name	AS IS (NO WARRANTY)
 
-// @host		localhost:3000
 // @schemes	http
 // @BasePath	/
 func main() {

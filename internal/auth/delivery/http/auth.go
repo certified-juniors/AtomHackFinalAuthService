@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,28 +28,7 @@ func NewAuthHandler(authMwRouter *mux.Router, mainRouter *mux.Router, u domain.A
 
 	authMwRouter.HandleFunc("/v1/auth/check", handler.CheckAuth).Methods(http.MethodPost, http.MethodOptions)
 	authMwRouter.HandleFunc("/v1/auth/logout", handler.Logout).Methods(http.MethodPost, http.MethodOptions)
-}
-
-// CheckAuth godoc
-//
-//	@Summary		check auth
-//	@Description	check if user is authenticated
-//	@Tags			Auth
-//	@Success		204
-//	@Failure		400	{object}	object{err=string}
-//	@Failure		401	{object}	object{err=string}
-//	@Failure		409	{object}	object{err=string}
-//	@Failure		500	{object}	object{err=string}
-//	@Router			/api/v1/auth/check [post]
-func (a *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
-	auth, err := a.auth(r)
-	if auth != true {
-		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
-		logs.LogError(logs.Logger, "http", "CheckAuth", err, err.Error())
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
+	authMwRouter.HandleFunc("/v1/auth/me", handler.Me).Methods(http.MethodGet, http.MethodOptions)
 }
 
 // Login godoc
@@ -65,8 +45,8 @@ func (a *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	object{err=string}
 //	@Router			/api/v1/auth/login [post]
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	auth, err := a.auth(r)
-	if auth == true {
+	auth, err := a.getUserID(r)
+	if auth != 0 {
 		domain.WriteError(w, "you must be unauthorised", domain.GetStatusCode(err))
 		logs.LogError(logs.Logger, "auth/http", "Login", err, "User is already logged in")
 		return
@@ -162,10 +142,10 @@ func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 //	@Failure		500		{object}	object{err=string}
 //	@Router			/api/v1/auth/register [post]
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	auth, err := a.auth(r)
-	if auth == true {
+	auth, err := a.getUserID(r)
+	if auth != 0 {
 		domain.WriteError(w, "you must be unauthorised", domain.GetStatusCode(err))
-		logs.LogError(logs.Logger, "auth/http", "Register.auth", err, "user is authorised")
+		logs.LogError(logs.Logger, "auth/http", "Register.getUserID", err, "user is authorised")
 		return
 	}
 
@@ -216,28 +196,89 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func (a *AuthHandler) auth(r *http.Request) (bool, error) {
+// CheckAuth godoc
+//
+//	@Summary		check getUserID
+//	@Description	check if user is authenticated
+//	@Tags			Auth
+//	@Success		204
+//	@Failure		400	{object}	object{err=string}
+//	@Failure		401	{object}	object{err=string}
+//	@Failure		409	{object}	object{err=string}
+//	@Failure		500	{object}	object{err=string}
+//	@Router			/api/v1/auth/check [post]
+func (a *AuthHandler) CheckAuth(w http.ResponseWriter, r *http.Request) {
+	auth, err := a.getUserID(r)
+	if auth != 0 {
+		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+		logs.LogError(logs.Logger, "http", "CheckAuth", err, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// Me godoc
+//
+//	@Summary		returns user data
+//	@Description	returns user data
+//	@Tags			Auth
+//	@Success		200		{object}	object{body=object{user=domain.UserWithoutPassword}}
+//	@Failure		400	{object}	object{err=string}
+//	@Failure		401	{object}	object{err=string}
+//	@Failure		409	{object}	object{err=string}
+//	@Failure		500	{object}	object{err=string}
+//	@Router			/api/v1/auth/me [get]
+func (a *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	id, err := a.getUserID(r)
+	if id == 0 {
+		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+		logs.LogError(logs.Logger, "auth/http", "Me", err, err.Error())
+		return
+	}
+
+	var user domain.User
+	if user, err = a.AuthUsecase.GetByID(id); err != nil {
+		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+		logs.LogError(logs.Logger, "auth/http", "Me", err, err.Error())
+		return
+	}
+
+	domain.WriteResponse(
+		w,
+		map[string]interface{}{
+			"user": user,
+		},
+		http.StatusOK,
+	)
+}
+
+func (a *AuthHandler) getUserID(r *http.Request) (int, error) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			return false, domain.ErrUnauthorized
+			return 0, domain.ErrUnauthorized
 		}
 
-		return false, domain.ErrBadRequest
+		return 0, domain.ErrBadRequest
 	}
 	if c.Expires.After(time.Now()) {
-		return false, domain.ErrUnauthorized
+		return 0, domain.ErrUnauthorized
 	}
 	sessionToken := c.Value
-	exists, err := a.AuthUsecase.IsAuth(sessionToken)
+	strID, err := a.AuthUsecase.GetUserID(sessionToken)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
-	if !exists {
-		return false, domain.ErrUnauthorized
+	if strID == "" {
+		return 0, domain.ErrUnauthorized
 	}
 
-	return true, domain.ErrAlreadyExists
+	id, err := strconv.Atoi(strID)
+	if err != nil {
+		return 0, domain.ErrUnauthorized
+	}
+	return id, domain.ErrAlreadyExists
 }
 
 func valid(email string) bool {

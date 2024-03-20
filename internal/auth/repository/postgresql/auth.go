@@ -14,6 +14,12 @@ const getByEmailQuery = `
 	WHERE email = $1
 `
 
+const getByIdQuery = `
+	SELECT id, email, name, surname, middle_name, role 
+	FROM "user"
+	WHERE id = $1
+`
+
 const addUserQuery = `
 	INSERT INTO "user" (email, password, name, surname, middle_name, role)
 	VALUES ($1, $2, $3, $4, $5, $6)
@@ -60,6 +66,33 @@ func (r *authPostgresqlRepository) GetByEmail(email string) (domain.User, error)
 	}
 	if err != nil {
 		logs.LogError(logs.Logger, "auth/postgres", "GetByEmail", err, err.Error())
+		return domain.User{}, err
+	}
+
+	return user, nil
+}
+
+func (r *authPostgresqlRepository) GetByID(id int) (domain.User, error) {
+	result := r.db.QueryRow(r.ctx, getByIdQuery, id)
+
+	logs.Logger.Debug("GetByEmail query result:", result)
+
+	var user domain.User
+	err := result.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Name,
+		&user.Surname,
+		&user.MiddleName,
+		&user.Role,
+	)
+
+	if err == pgx.ErrNoRows {
+		logs.LogError(logs.Logger, "auth/postgres", "GetByID", err, err.Error())
+		return domain.User{}, domain.ErrNotFound
+	}
+	if err != nil {
+		logs.LogError(logs.Logger, "auth/postgres", "GetByID", err, err.Error())
 		return domain.User{}, err
 	}
 

@@ -88,18 +88,32 @@ func (u *authUsecase) Register(user domain.User) (int, error) {
 	}
 }
 
-func (u *authUsecase) IsAuth(token string) (bool, error) {
-	if token == "" {
-		return false, domain.ErrInvalidToken
+func (u *authUsecase) GetByID(id int) (domain.User, error) {
+	if id == 0 {
+		return domain.User{}, domain.ErrBadRequest
 	}
 
-	auth, err := u.sessionRepo.SessionExists(token)
-	logs.Logger.Debug("Usecase IsAuth auth: ", auth)
+	user, err := u.authRepo.GetByID(id)
+	logs.Logger.Debug("Usecase GetByID user: ", user)
 	if err != nil {
-		return false, err
+		return domain.User{}, err
 	}
 
-	return auth, nil
+	return user, nil
+}
+
+func (u *authUsecase) GetUserID(token string) (string, error) {
+	if token == "" {
+		return "", domain.ErrInvalidToken
+	}
+
+	id, err := u.sessionRepo.GetUserID(token)
+	logs.Logger.Debug("Usecase GetUserID auth: ", id)
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
 }
 
 func (u *authUsecase) GenerateJWT() (string, error) {

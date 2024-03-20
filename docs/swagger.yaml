@@ -26,7 +26,19 @@ definitions:
       surname:
         type: string
     type: object
-host: localhost:3000
+  domain.UserWithoutPassword:
+    properties:
+      email:
+        type: string
+      middleName:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      surname:
+        type: string
+    type: object
 info:
   contact:
     email: ax.chinaev@yandex.ru
@@ -72,7 +84,7 @@ paths:
               err:
                 type: string
             type: object
-      summary: check auth
+      summary: check getUserID
       tags:
       - Auth
   /api/v1/auth/login:
@@ -164,6 +176,51 @@ paths:
                 type: string
             type: object
       summary: logout user
+      tags:
+      - Auth
+  /api/v1/auth/me:
+    get:
+      description: returns user data
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              body:
+                properties:
+                  user:
+                    $ref: '#/definitions/domain.UserWithoutPassword'
+                type: object
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              err:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              err:
+                type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            properties:
+              err:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              err:
+                type: string
+            type: object
+      summary: returns user data
       tags:
       - Auth
   /api/v1/auth/register:
