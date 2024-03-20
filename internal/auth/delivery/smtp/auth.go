@@ -3,7 +3,6 @@ package smtp
 import (
 	"fmt"
 	"github.com/certified-juniors/AtomHack/internal/domain"
-	"github.com/joho/godotenv"
 	"net/smtp"
 	"os"
 	"strconv"
@@ -56,7 +55,7 @@ func getParams() domain.SMTPParams {
 	return params
 }
 
-func (s *Sender) SendMailToSupport(subject, body string) error {
+func (s *Sender) SendMailToSupport(title, body string) error {
 	params := getParams()
 	conn, err := smtp.Dial(fmt.Sprintf("%s:%d", params.SmtpHost, params.SmtpPort))
 	if err != nil {
@@ -91,23 +90,12 @@ func (s *Sender) SendMailToSupport(subject, body string) error {
 	// Формирование заголовков письма
 	message := fmt.Sprintf("From: %s\r\n", params.NoreplyUsername)
 	message += fmt.Sprintf("To: %s\r\n", params.SupportUsername)
-	message += fmt.Sprintf("Subject: %s\r\n", subject)
+	message += fmt.Sprintf("Subject: %s\r\n", title)
 	message += "MIME-version: 1.0\r\n"
 	message += "Content-Type: multipart/mixed; boundary=boundary\r\n\r\n"
 	message += "--boundary\r\n"
 	message += "Content-Type: text/plain; charset=utf-8\r\n"
 	message += "\r\n" + body + "\r\n"
-
-	// Добавление вложений к письму
-	//for filename, content := range attachments {
-	//	message += fmt.Sprintf("--boundary\r\n")
-	//	message += fmt.Sprintf("Content-Type: application/octet-stream\r\n")
-	//	message += fmt.Sprintf("Content-Disposition: attachment; filename=\"%s\"\r\n", filename)
-	//	message += "Content-Transfer-Encoding: base64\r\n\r\n"
-	//	// Кодирование содержимого файла в Base64
-	//	encoded := base64.StdEncoding.EncodeToString(content)
-	//	message += encoded + "\r\n"
-	//}
 
 	// Завершение письма
 	message += "--boundary--\r\n"
@@ -121,11 +109,4 @@ func (s *Sender) SendMailToSupport(subject, body string) error {
 
 	fmt.Println("Письмо успешно отправлено!")
 	return nil
-}
-
-func main() {
-	_ = godotenv.Load()
-
-	s := NewSMTP()
-	s.SendMailToSupport("localhost", "somebody")
 }
