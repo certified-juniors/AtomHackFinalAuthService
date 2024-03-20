@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 
@@ -23,10 +22,7 @@ import (
 )
 
 func StartServer() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
+	_ = godotenv.Load()
 
 	ctx := context.Background()
 	accessLogger := middleware.AccessLogger{

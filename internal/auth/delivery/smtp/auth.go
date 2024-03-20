@@ -48,10 +48,12 @@ func getParams() domain.SMTPParams {
 	port, _ := strconv.Atoi(os.Getenv("EMAIL_SERVICE_SMTP_PORT"))
 	params.SmtpHost = os.Getenv("MAIL_SERVICE_SMTP_HOST")
 	params.SmtpPort = port
-	paraNoreplyUsername := os.Getenv("EMAIL_SERVICE_SMTP_NO_REPLY_USERNAME")
-	NoreplyPassword := os.Getenv("EMAIL_SERVICE_SMTP_NO_REPLY_PASSWORD")
-	SupportUsername := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_USERNAME")
-	SupportPassword := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_PASSWORD")
+	params.NoreplyUsername = os.Getenv("EMAIL_SERVICE_SMTP_NO_REPLY_USERNAME")
+	params.NoreplyPassword = os.Getenv("EMAIL_SERVICE_SMTP_NO_REPLY_PASSWORD")
+	params.SupportUsername = os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_USERNAME")
+	params.SupportPassword = os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_PASSWORD")
+
+	return params
 }
 
 func (s *Sender) SendMailToSupport(subject, body string) error {
