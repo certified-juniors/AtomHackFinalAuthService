@@ -1,4 +1,5 @@
-CREATE EXTENSION IF NOT EXISTS moddatetime
+CREATE
+EXTENSION IF NOT EXISTS moddatetime
     WITH SCHEMA public
     CASCADE;
 
@@ -11,6 +12,7 @@ CREATE TABLE "user"
     surname     TEXT  NOT NULL,
     middle_name TEXT  NOT NULL,
     role        TEXT  NOT NULL,
+    confirmed   BOOL        DEFAULT FALSE,
     created_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

@@ -33,6 +33,7 @@ type User struct {
 	Surname    string `json:"surname"`
 	MiddleName string `json:"middleName"`
 	Role       string `json:"role"`
+	Confirmed  bool   `json:"confirmed"`
 }
 
 type Session struct {
@@ -46,8 +47,8 @@ type SMTPParams struct {
 	SmtpPort        int
 	NoreplyUsername string
 	NoreplyPassword string
-	SupportUsername string
-	SupportPassword string
+	DestUsername    string
+	DestPassword    string
 }
 
 type AuthUsecase interface {

@@ -2,6 +2,8 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/certified-juniors/AtomHack/internal/auth/delivery/smtp"
 	"net/http"
 	"net/mail"
 	"strconv"
@@ -29,6 +31,10 @@ func NewAuthHandler(authMwRouter *mux.Router, mainRouter *mux.Router, u domain.A
 	authMwRouter.HandleFunc("/v1/auth/check", handler.CheckAuth).Methods(http.MethodPost, http.MethodOptions)
 	authMwRouter.HandleFunc("/v1/auth/logout", handler.Logout).Methods(http.MethodPost, http.MethodOptions)
 	authMwRouter.HandleFunc("/v1/auth/me", handler.Me).Methods(http.MethodGet, http.MethodOptions)
+	mainRouter.HandleFunc("/v1/auth/send", func(w http.ResponseWriter, r *http.Request) {
+		s := smtp.NewSMTP()
+		fmt.Println(s.SendMailToClient("title", "345677", "ax.chinaev@yandex.ru"))
+	}).Methods(http.MethodPost, http.MethodOptions)
 }
 
 // Login godoc
