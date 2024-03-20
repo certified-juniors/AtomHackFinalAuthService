@@ -61,7 +61,7 @@ func StartServer() {
 
 	authMiddlewareRouter.Use(mw.IsAuth)
 	mainRouter.Use(accessLogger.AccessLogMiddleware)
-	//mainRouter.Use(middleware.CORS)
+	mainRouter.Use(middleware.CORS)
 
 	serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
 	logs.Logger.Info("starting server at ", serverPort)

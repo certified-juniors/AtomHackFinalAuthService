@@ -5,6 +5,8 @@ import (
 	"github.com/certified-juniors/AtomHack/internal/domain"
 	"github.com/joho/godotenv"
 	"net/smtp"
+	"os"
+	"strconv"
 )
 
 type Sender struct {
@@ -43,23 +45,18 @@ func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 func getParams() domain.SMTPParams {
 	params := domain.SMTPParams{}
 
-	params.SmtpHost = "smtp.beget.com"
-	params.SmtpPort = 2525
-	paraNoreplyUsername := "ax.chinaev@yandex.ru"
-	NoreplyPassword := "Bazabaza1!"
-	//SupportUsername := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_USERNAME")
-	//SupportPassword := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_PASSWORD")
+	port, _ := strconv.Atoi(os.Getenv("EMAIL_SERVICE_SMTP_PORT"))
+	params.SmtpHost = os.Getenv("MAIL_SERVICE_SMTP_HOST")
+	params.SmtpPort = port
+	paraNoreplyUsername := os.Getenv("EMAIL_SERVICE_SMTP_NO_REPLY_USERNAME")
+	NoreplyPassword := os.Getenv("EMAIL_SERVICE_SMTP_NO_REPLY_PASSWORD")
+	SupportUsername := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_USERNAME")
+	SupportPassword := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_PASSWORD")
 }
 
 func (s *Sender) SendMailToSupport(subject, body string) error {
-	// Подключение к SMTP серверу
-	SmtpHost := "smtp.beget.com"
-	SmtpPort := 2525
-	NoreplyUsername := "ax.chinaev@yandex.ru"
-	NoreplyPassword := "Bazabaza1!"
-	//SupportUsername := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_USERNAME")
-	//SupportPassword := os.Getenv("EMAIL_SERVICE_SMTP_SUPPORT_PASSWORD")
-	conn, err := smtp.Dial(fmt.Sprintf("%s:%d", SmtpHost, SmtpPort))
+	params := getParams()
+	conn, err := smtp.Dial(fmt.Sprintf("%s:%d", params.SmtpHost, params.SmtpPort))
 	if err != nil {
 		fmt.Println("Ошибка при подключении к SMTP серверу:", err)
 		return err
@@ -67,14 +64,14 @@ func (s *Sender) SendMailToSupport(subject, body string) error {
 	defer conn.Close()
 
 	// Аутентификация с использованием кастомной функции
-	auth := customAuth(NoreplyUsername, NoreplyPassword, SmtpHost)
+	auth := customAuth(params.NoreplyUsername, params.NoreplyPassword, params.SmtpHost)
 	if err := conn.Auth(auth); err != nil {
 		fmt.Println("Ошибка при аутентификации:", err)
 		return err
 	}
 
 	// Отправка письма
-	if err := conn.Mail(NoreplyUsername); err != nil {
+	if err := conn.Mail(params.NoreplyUsername); err != nil {
 		fmt.Println("Ошибка при отправке адреса отправителя:", err)
 		return err
 	}
@@ -90,8 +87,8 @@ func (s *Sender) SendMailToSupport(subject, body string) error {
 	defer data.Close()
 
 	// Формирование заголовков письма
-	message := fmt.Sprintf("From: %s\r\n", NoreplyUsername)
-	message += fmt.Sprintf("To: %s\r\n", SupportUsername)
+	message := fmt.Sprintf("From: %s\r\n", params.NoreplyUsername)
+	message += fmt.Sprintf("To: %s\r\n", params.SupportUsername)
 	message += fmt.Sprintf("Subject: %s\r\n", subject)
 	message += "MIME-version: 1.0\r\n"
 	message += "Content-Type: multipart/mixed; boundary=boundary\r\n\r\n"
