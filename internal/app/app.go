@@ -62,7 +62,7 @@ func StartServer() {
 	serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
 	logs.Logger.Info("starting server at ", serverPort)
 
-	err = http.ListenAndServe(serverPort, mainRouter)
+	err := http.ListenAndServe(serverPort, mainRouter)
 	if err != nil {
 		logs.LogFatal(logs.Logger, "main", "main", err, err.Error())
 	}

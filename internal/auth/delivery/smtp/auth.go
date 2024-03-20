@@ -77,10 +77,10 @@ func (s *Sender) SendMailToSupport(subject, body string) error {
 		fmt.Println("Ошибка при отправке адреса отправителя:", err)
 		return err
 	}
-	//if err := conn.Rcpt(s.SMTPCfg.SupportUsername); err != nil {
-	//	fmt.Println("Ошибка при отправке адреса получателя:", err)
-	//	return err
-	//}
+	if err := conn.Rcpt(params.SupportUsername); err != nil {
+		fmt.Println("Ошибка при отправке адреса получателя:", err)
+		return err
+	}
 	data, err := conn.Data()
 	if err != nil {
 		fmt.Println("Ошибка при отправке данных письма:", err)
