@@ -49,6 +49,7 @@ func StartServer() {
 	auth_http.NewAuthHandler(authMiddlewareRouter, mainRouter, au)
 
 	docs.SwaggerInfo.Host = os.Getenv("SWAGGER_ADDR")
+	docs.SwaggerInfo.Schemes = []string{os.Getenv("SWAGGER_SCHEME")}
 	mainRouter.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	mw := middleware.NewAuth(au)

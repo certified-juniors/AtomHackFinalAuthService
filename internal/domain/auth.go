@@ -46,8 +46,7 @@ type AuthUsecase interface {
 	Logout(token string) error
 	Register(user User) (int, error)
 	GetUserID(token string) (string, error)
-	GenerateJWT() (string, error)
-	ParseJWT(tokenString string) (string, error)
+	GenerateJWT(email string) (string, error)
 	GetByID(id int) (User, error)
 }
 

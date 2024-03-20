@@ -38,7 +38,7 @@ func (u *authUsecase) Login(credentials domain.Credentials) (domain.Session, int
 		return domain.Session{}, 0, domain.ErrWrongCredentials
 	}
 
-	t, err := u.GenerateJWT()
+	t, err := u.GenerateJWT(credentials.Email)
 	if err != nil {
 		return domain.Session{}, 0, err
 	}
@@ -116,8 +116,11 @@ func (u *authUsecase) GetUserID(token string) (string, error) {
 	return id, nil
 }
 
-func (u *authUsecase) GenerateJWT() (string, error) {
+func (u *authUsecase) GenerateJWT(email string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := token.Claims.(jwt.MapClaims)
+	claims["email"] = email
 
 	tokenString, err := token.SignedString(u.jwtSecret)
 	if err != nil {
@@ -127,17 +130,17 @@ func (u *authUsecase) GenerateJWT() (string, error) {
 	return tokenString, nil
 }
 
-func (u *authUsecase) ParseJWT(tokenString string) (string, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte("SuperSecretKey"), nil
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	return token.Raw, nil
-}
+//func (u *authUsecase) ParseJWT(tokenString string) (string, error) {
+//	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+//		return u.jwtSecret, nil
+//	})
+//
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	return token.Raw, nil
+//}
 
 func HashPassword(salt []byte, password []byte) []byte {
 	hashedPass := argon2.IDKey(password, salt, 1, 64*1024, 4, 32)
