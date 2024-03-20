@@ -9,14 +9,14 @@ import (
 )
 
 const getByEmailQuery = `
-	SELECT id, email, password
+	SELECT id, email, password, name, surname, middle_name, role 
 	FROM "user"
 	WHERE email = $1
 `
 
 const addUserQuery = `
-	INSERT INTO "user" (password, name, email, image_path)
-	VALUES ($1, $2, $3, $4)
+	INSERT INTO "user" (email, password, name, surname, middle_name, role)
+	VALUES ($1, $2, $3, $4, $5, $6)
 	RETURNING id
 `
 
@@ -48,14 +48,18 @@ func (r *authPostgresqlRepository) GetByEmail(email string) (domain.User, error)
 		&user.ID,
 		&user.Email,
 		&user.Password,
+		&user.Name,
+		&user.Surname,
+		&user.MiddleName,
+		&user.Role,
 	)
 
 	if err == pgx.ErrNoRows {
-		logs.LogError(logs.Logger, "auth_postgres", "GetByEmail", err, err.Error())
+		logs.LogError(logs.Logger, "auth/postgres", "GetByEmail", err, err.Error())
 		return domain.User{}, domain.ErrNotFound
 	}
 	if err != nil {
-		logs.LogError(logs.Logger, "auth_postgres", "GetByEmail", err, err.Error())
+		logs.LogError(logs.Logger, "auth/postgres", "GetByEmail", err, err.Error())
 		return domain.User{}, err
 	}
 
@@ -68,10 +72,13 @@ func (r *authPostgresqlRepository) AddUser(user domain.User) (int, error) {
 	}
 
 	result := r.db.QueryRow(r.ctx, addUserQuery,
-		user.Password,
-		user.Name,
-		user.Email,
-		user.ImagePath)
+		&user.Email,
+		&user.Password,
+		&user.Name,
+		&user.Surname,
+		&user.MiddleName,
+		&user.Role,
+	)
 
 	logs.Logger.Debug("AddUser queryRow result:", result)
 

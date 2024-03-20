@@ -3,24 +3,27 @@ package usecase
 import (
 	"bytes"
 	"crypto/rand"
-	"github.com/certified-juniors/AtomHack/internal/domain"
-	logs "github.com/certified-juniors/AtomHack/internal/logger"
 	"time"
 
+	"github.com/certified-juniors/AtomHack/internal/domain"
+	logs "github.com/certified-juniors/AtomHack/internal/logger"
+
+	"github.com/golang-jwt/jwt"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/argon2"
 )
 
 type authUsecase struct {
 	authRepo    domain.AuthRepository
 	sessionRepo domain.SessionRepository
+	jwtSecret   []byte
 }
 
-func NewAuthUsecase(ar domain.AuthRepository, sr domain.SessionRepository) domain.AuthUsecase {
+func NewAuthUsecase(ar domain.AuthRepository, sr domain.SessionRepository, js []byte) domain.AuthUsecase {
 	return &authUsecase{
 		authRepo:    ar,
 		sessionRepo: sr,
+		jwtSecret:   js,
 	}
 }
 
@@ -35,8 +38,15 @@ func (u *authUsecase) Login(credentials domain.Credentials) (domain.Session, int
 		return domain.Session{}, 0, domain.ErrWrongCredentials
 	}
 
+	t, err := u.GenerateJWT()
+	if err != nil {
+		return domain.Session{}, 0, err
+	}
+
+	logs.Logger.Debug("usecase/http Login jwt:\n", t)
+
 	session := domain.Session{
-		Token:     uuid.NewString(),
+		Token:     t,
 		ExpiresAt: time.Now().Add(24 * time.Hour),
 		UserID:    expectedUser.ID,
 	}
@@ -90,6 +100,29 @@ func (u *authUsecase) IsAuth(token string) (bool, error) {
 	}
 
 	return auth, nil
+}
+
+func (u *authUsecase) GenerateJWT() (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	tokenString, err := token.SignedString(u.jwtSecret)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func (u *authUsecase) ParseJWT(tokenString string) (string, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte("SuperSecretKey"), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return token.Raw, nil
 }
 
 func HashPassword(salt []byte, password []byte) []byte {

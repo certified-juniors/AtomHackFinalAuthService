@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	logs "github.com/ellexo2456/FilmLib/internal/logger"
+	logs "github.com/certified-juniors/AtomHack/internal/logger"
 	"os"
 
 	"github.com/redis/go-redis/v9"

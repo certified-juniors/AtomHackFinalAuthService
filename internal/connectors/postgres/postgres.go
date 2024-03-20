@@ -3,9 +3,9 @@ package postgres
 import (
 	"context"
 	"fmt"
+	logs "github.com/certified-juniors/AtomHack/internal/logger"
 	"os"
 
-	logs "github.com/ellexo2456/FilmLib/internal/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

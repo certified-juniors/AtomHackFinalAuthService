@@ -8,14 +8,12 @@ import (
 type ActorWithFilms struct {
 	ID        int                 `json:"id"`
 	Name      string              `json:"name"`
-	Sex       Sex                 `json:"sex"`
 	Birthdate time.Time           `json:"birthdate" format:"date"`
 	Films     []FilmWithoutActors `json:"films"`
 }
 
 type ActorToAdd struct {
 	Name      string    `json:"name"`
-	Sex       Sex       `json:"sex"`
 	Birthdate time.Time `json:"birthdate" format:"date"`
 }
 
@@ -26,7 +24,6 @@ type ActorToFilmAdd struct {
 type ActorWithoutFilms struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
-	Sex       Sex       `json:"sex"`
 	Birthdate time.Time `json:"birthdate" format:"date"`
 }
 

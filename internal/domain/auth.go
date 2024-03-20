@@ -26,13 +26,13 @@ type Credentials struct {
 }
 
 type User struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Password  []byte `json:"password"`
-	Email     string `json:"email"`
-	ImagePath string `json:"imagePath"`
-	ImageData []byte `json:"imageData"`
-	Role      Role
+	ID         int    `json:"id"`
+	Email      string `json:"email"`
+	Password   []byte `json:"password"`
+	Name       string `json:"name"`
+	Surname    string `json:"surname"`
+	MiddleName string `json:"middleName"`
+	Role       string `json:"role"`
 }
 
 type Session struct {
@@ -46,6 +46,8 @@ type AuthUsecase interface {
 	Logout(token string) error
 	Register(user User) (int, error)
 	IsAuth(token string) (bool, error)
+	GenerateJWT() (string, error)
+	ParseJWT(tokenString string) (string, error)
 }
 
 type AuthRepository interface {

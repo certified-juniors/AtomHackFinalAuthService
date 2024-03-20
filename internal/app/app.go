@@ -39,9 +39,9 @@ func StartServer() {
 	sr := auth_redis.NewSessionRedisRepository(rc)
 	ar := auth_postgres.NewAuthPostgresqlRepository(pc, ctx)
 
-	au := auth_usecase.NewAuthUsecase(ar, sr)
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 
-	//sanitizer := bluemonday.UGCPolicy()
+	au := auth_usecase.NewAuthUsecase(ar, sr, jwtSecret)
 
 	auth_http.NewAuthHandler(authMiddlewareRouter, mainRouter, au)
 
@@ -49,8 +49,7 @@ func StartServer() {
 
 	authMiddlewareRouter.Use(mw.IsAuth)
 	mainRouter.Use(accessLogger.AccessLogMiddleware)
-	mainRouter.Use(mux.CORSMethodMiddleware(mainRouter))
-	//mainRouter.Use(mw.CORS)
+	mainRouter.Use(middleware.CORS)
 
 	serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
 	logs.Logger.Info("starting server at ", serverPort)

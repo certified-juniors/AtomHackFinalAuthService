@@ -26,9 +26,11 @@ func (m *AuthMiddleware) IsAuth(next http.Handler) http.Handler {
 			domain.WriteError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
 		if c.Expires.After(time.Now()) {
 			domain.WriteError(w, "cookie is expired", http.StatusUnauthorized)
 		}
+
 		sessionToken := c.Value
 		exists, err := m.authUsecase.IsAuth(sessionToken)
 		if err != nil {
