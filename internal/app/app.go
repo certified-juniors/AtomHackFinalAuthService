@@ -57,6 +57,7 @@ func StartServer() {
 
 	authMiddlewareRouter.Use(mw.IsAuth)
 	mainRouter.Use(accessLogger.AccessLogMiddleware)
+	mainRouter.Use(mux.CORSMethodMiddleware(mainRouter))
 	mainRouter.Use(middleware.CORS)
 
 	serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
