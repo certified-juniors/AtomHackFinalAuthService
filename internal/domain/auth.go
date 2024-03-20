@@ -41,6 +41,15 @@ type Session struct {
 	UserID    int       `json:"-"`
 }
 
+type SMTPParams struct {
+	SmtpHost        string
+	SmtpPort        int
+	NoreplyUsername string
+	NoreplyPassword string
+	SupportUsername string
+	SupportPassword string
+}
+
 type AuthUsecase interface {
 	Login(credentials Credentials) (Session, int, error)
 	Logout(token string) error

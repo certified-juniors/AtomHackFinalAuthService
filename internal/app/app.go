@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	httpSwagger "github.com/swaggo/http-swagger"
+	"log"
 	"net/http"
 	"os"
 
@@ -19,10 +19,15 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func StartServer() {
 	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ctx := context.Background()
 	accessLogger := middleware.AccessLogger{
 		LogrusLogger: logs.Logger,
