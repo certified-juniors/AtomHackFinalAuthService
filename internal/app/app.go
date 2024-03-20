@@ -2,9 +2,11 @@ package app
 
 import (
 	"context"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"net/http"
 	"os"
 
+	_ "github.com/certified-juniors/AtomHack/docs"
 	auth_http "github.com/certified-juniors/AtomHack/internal/auth/delivery/http"
 	auth_postgres "github.com/certified-juniors/AtomHack/internal/auth/repository/postgresql"
 	auth_redis "github.com/certified-juniors/AtomHack/internal/auth/repository/redis"
@@ -34,6 +36,8 @@ func StartServer() {
 	defer rc.Close()
 
 	mainRouter := mux.NewRouter()
+	mainRouter.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
+
 	authMiddlewareRouter := mainRouter.PathPrefix("/api").Subrouter()
 
 	sr := auth_redis.NewSessionRedisRepository(rc)
@@ -49,7 +53,7 @@ func StartServer() {
 
 	authMiddlewareRouter.Use(mw.IsAuth)
 	mainRouter.Use(accessLogger.AccessLogMiddleware)
-	mainRouter.Use(middleware.CORS)
+	//mainRouter.Use(middleware.CORS)
 
 	serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
 	logs.Logger.Info("starting server at ", serverPort)
