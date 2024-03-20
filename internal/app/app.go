@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 
@@ -15,6 +16,7 @@ import (
 	logs "github.com/certified-juniors/AtomHack/internal/logger"
 	"github.com/certified-juniors/AtomHack/internal/middleware"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -57,15 +59,22 @@ func StartServer() {
 
 	authMiddlewareRouter.Use(mw.IsAuth)
 	mainRouter.Use(accessLogger.AccessLogMiddleware)
-	mainRouter.Use(mux.CORSMethodMiddleware(mainRouter))
-	mainRouter.Use(middleware.CORS)
+	//mainRouter.Use(mux.CORSMethodMiddleware(mainRouter))
+	//mainRouter.Use(middleware.CORS)
 
-	serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
-	logs.Logger.Info("starting server at ", serverPort)
+	//serverPort := ":" + os.Getenv("HTTP_SERVER_PORT")
+	//logs.Logger.Info("starting server at ", serverPort)
 
-	err := http.ListenAndServe(serverPort, mainRouter)
-	if err != nil {
-		logs.LogFatal(logs.Logger, "main", "main", err, err.Error())
-	}
-	logs.Logger.Info("server stopped")
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("HTTP_SERVER_PORT"), handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"*"}),
+		handlers.AllowCredentials(),
+	)(mainRouter)))
+
+	//err := http.ListenAndServe(serverPort, mainRouter)
+	//if err != nil {
+	//	logs.LogFatal(logs.Logger, "main", "main", err, err.Error())
+	//}
+	//logs.Logger.Info("server stopped")
 }
