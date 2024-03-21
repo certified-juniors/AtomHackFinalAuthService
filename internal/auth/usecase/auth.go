@@ -3,6 +3,7 @@ package usecase
 import (
 	"bytes"
 	"crypto/rand"
+	"strconv"
 	"time"
 
 	"github.com/certified-juniors/AtomHack/internal/domain"
@@ -36,6 +37,10 @@ func (u *authUsecase) Login(credentials domain.Credentials) (domain.Session, int
 
 	if !checkPasswords(expectedUser.Password, credentials.Password) {
 		return domain.Session{}, 0, domain.ErrWrongCredentials
+	}
+
+	if !expectedUser.Confirmed {
+		return domain.Session{}, 0, domain.ErrUnconfirmedUser
 	}
 
 	t, err := u.GenerateJWT(credentials.Email)
@@ -86,6 +91,57 @@ func (u *authUsecase) Register(user domain.User) (int, error) {
 	} else {
 		return id, nil
 	}
+}
+
+func (u *authUsecase) ConfirmUser(pair domain.ConfirmPair) (domain.Session, error) {
+	if pair.ID == 0 || pair.Code == "" {
+		return domain.Session{}, domain.ErrBadRequest
+	}
+	expectedCode, err := u.sessionRepo.GetCodeByID(strconv.Itoa(pair.ID))
+	if err != nil {
+		return domain.Session{}, err
+	}
+
+	if expectedCode != pair.Code {
+		return domain.Session{}, domain.ErrBadRequest
+	}
+
+	email, err := u.authRepo.ConfirmUser(pair.ID)
+	if err != nil {
+		return domain.Session{}, err
+	}
+
+	t, err := u.GenerateJWT(email)
+	if err != nil {
+		return domain.Session{}, err
+	}
+
+	logs.Logger.Debug("usecase/http ConfirmUser jwt:\n", t)
+
+	session := domain.Session{
+		Token:     t,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+		UserID:    pair.ID,
+	}
+
+	if err = u.sessionRepo.Add(session); err != nil {
+		return domain.Session{}, err
+	}
+
+	return session, nil
+}
+
+func (u *authUsecase) AddCodeByID(id int, code string) error {
+	if id <= 0 || code == "" {
+		return domain.ErrBadRequest
+	}
+
+	err := u.sessionRepo.AddCodeByID(id, code)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *authUsecase) GetByID(id int) (domain.User, error) {

@@ -1,5 +1,12 @@
 basePath: /
 definitions:
+  domain.ConfirmPair:
+    properties:
+      code:
+        type: string
+      id:
+        type: integer
+    type: object
   domain.Credentials:
     properties:
       email:
@@ -85,6 +92,36 @@ paths:
                 type: string
             type: object
       summary: check getUserID
+      tags:
+      - Auth
+  /api/v1/auth/confirm:
+    post:
+      description: confirm user
+      parameters:
+      - description: user id and verification code
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/domain.ConfirmPair'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              err:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              err:
+                type: string
+            type: object
+      summary: confirm user
       tags:
       - Auth
   /api/v1/auth/login:

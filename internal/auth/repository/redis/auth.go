@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"github.com/certified-juniors/AtomHack/internal/domain"
+	"strconv"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -30,6 +31,19 @@ func (s *sessionRedisRepository) Add(session domain.Session) error {
 	return nil
 }
 
+func (s *sessionRedisRepository) AddCodeByID(id int, code string) error {
+	if code == "" || id <= 0 {
+		return domain.ErrBadRequest
+	}
+
+	err := s.client.Set(context.TODO(), strconv.Itoa(id), code, 24*time.Hour).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *sessionRedisRepository) DeleteByToken(token string) error {
 	if token == "" {
 		return domain.ErrInvalidToken
@@ -49,6 +63,19 @@ func (s *sessionRedisRepository) GetUserID(token string) (string, error) {
 	}
 
 	id, err := s.client.Get(context.Background(), token).Result()
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func (s *sessionRedisRepository) GetCodeByID(id string) (string, error) {
+	if id == "" {
+		return "", domain.ErrInvalidToken
+	}
+
+	id, err := s.client.Get(context.Background(), id).Result()
 	if err != nil {
 		return "", err
 	}

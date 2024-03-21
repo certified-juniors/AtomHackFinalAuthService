@@ -33,6 +33,7 @@ type User struct {
 	Surname    string `json:"surname"`
 	MiddleName string `json:"middleName"`
 	Role       string `json:"role"`
+	Confirmed  bool   `json:"confirmed"`
 }
 
 type Session struct {
@@ -46,8 +47,13 @@ type SMTPParams struct {
 	SmtpPort        int
 	NoreplyUsername string
 	NoreplyPassword string
-	SupportUsername string
-	SupportPassword string
+	DestUsername    string
+	DestPassword    string
+}
+
+type ConfirmPair struct {
+	ID   int    `json:"id"`
+	Code string `json:"code"`
 }
 
 type AuthUsecase interface {
@@ -57,6 +63,8 @@ type AuthUsecase interface {
 	GetUserID(token string) (string, error)
 	GenerateJWT(email string) (string, error)
 	GetByID(id int) (User, error)
+	AddCodeByID(id int, code string) error
+	ConfirmUser(pair ConfirmPair) (Session, error)
 }
 
 type AuthRepository interface {
@@ -64,10 +72,13 @@ type AuthRepository interface {
 	GetByID(id int) (User, error)
 	AddUser(user User) (int, error)
 	UserExists(email string) (bool, error)
+	ConfirmUser(id int) (string, error)
 }
 
 type SessionRepository interface {
 	Add(session Session) error
 	DeleteByToken(token string) error
 	GetUserID(token string) (string, error)
+	AddCodeByID(id int, code string) error
+	GetCodeByID(id string) (string, error)
 }

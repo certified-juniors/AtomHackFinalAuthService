@@ -16,6 +16,7 @@ var (
 	ErrInvalidToken        = errors.New("session token is invalid")
 	ErrAlreadyExists       = errors.New("resource already exists")
 	ErrOutOfRange          = errors.New("id is out of range")
+	ErrUnconfirmedUser     = errors.New("user isnt confirmed")
 )
 
 func GetStatusCode(err error) int {
@@ -38,6 +39,8 @@ func GetStatusCode(err error) int {
 		return http.StatusNotFound
 	case errors.Is(err, ErrAlreadyExists):
 		return http.StatusConflict
+	case errors.Is(err, ErrUnconfirmedUser):
+		return http.StatusForbidden
 	default:
 		return http.StatusInternalServerError
 	}
