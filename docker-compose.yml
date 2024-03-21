@@ -1,0 +1,53 @@
+version: '3.9'
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  local_area:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:15.3-alpine
+    restart: always
+    networks:
+      local_area:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    expose:
+      - ${POSTGRES_PORT}
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - ${HTTP_SERVER_PORT}:${HTTP_SERVER_PORT}
+    networks:
+      local_area:
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:6.2-alpine
+    networks:
+      local_area:
+    restart: always
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - redis_data:/var/lib/redis/data
+    expose:
+      - ${REDIS_PORT}
