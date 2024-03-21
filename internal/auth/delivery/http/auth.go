@@ -88,6 +88,8 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Expires:  session.ExpiresAt,
 		Path:     "/",
 		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
 	})
 
 	domain.WriteResponse(
@@ -127,6 +129,8 @@ func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now(),
 		Path:     "/",
 		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
 	})
 
 	w.WriteHeader(http.StatusNoContent)
@@ -240,6 +244,8 @@ func (a *AuthHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 		Expires:  session.ExpiresAt,
 		Path:     "/",
 		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
 	})
 
 	w.WriteHeader(http.StatusNoContent)
