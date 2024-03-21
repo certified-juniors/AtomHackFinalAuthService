@@ -28,11 +28,11 @@ func NewAuthHandler(authMwRouter *mux.Router, mainRouter *mux.Router, u domain.A
 
 	mainRouter.HandleFunc("/api/v1/auth/login", handler.Login).Methods(http.MethodPost, http.MethodOptions)
 	mainRouter.HandleFunc("/api/v1/auth/register", handler.Register).Methods(http.MethodPost, http.MethodOptions)
+	mainRouter.HandleFunc("/api/v1/auth/confirm", handler.Confirm).Methods(http.MethodPost, http.MethodOptions)
+	mainRouter.HandleFunc("/api/v1/auth/me", handler.Me).Methods(http.MethodGet, http.MethodOptions)
 
 	authMwRouter.HandleFunc("/v1/auth/check", handler.CheckAuth).Methods(http.MethodPost, http.MethodOptions)
 	authMwRouter.HandleFunc("/v1/auth/logout", handler.Logout).Methods(http.MethodPost, http.MethodOptions)
-	authMwRouter.HandleFunc("/v1/auth/me", handler.Me).Methods(http.MethodGet, http.MethodOptions)
-	mainRouter.HandleFunc("/v1/auth/confirm/{id}", handler.Verify).Methods(http.MethodPost, http.MethodOptions)
 }
 
 // Login godoc
@@ -197,19 +197,6 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		logs.LogError(logs.Logger, "auth/http", "Register.register", err, "Failed to save code")
 		return
 	}
-	//session, _, err := a.AuthUsecase.Login(domain.Credentials{Email: user.Email, Password: user.Password})
-	//if err != nil {
-	//	domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
-	//	logs.LogError(logs.Logger, "auth/http", "Register.login", err, "Failed to login")
-	//	return
-	//}
-	//http.SetCookie(w, &http.Cookie{
-	//	Name:     "session_token",
-	//	Value:    session.Token,
-	//	Expires:  session.ExpiresAt,
-	//	Path:     "/",
-	//	HttpOnly: true,
-	//})
 
 	domain.WriteResponse(
 		w,
@@ -220,24 +207,40 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-// Verify godoc
+// Confirm godoc
 //
-//	@Summary		check getUserID
-//	@Description	check if user is authenticated
+//	@Summary		confirm user
+//	@Description	confirm user
+//	@Param			body	body		domain.ConfirmPair	true	"user id and verification code"
 //	@Tags			Auth
 //	@Success		204
 //	@Failure		400	{object}	object{err=string}
-//	@Failure		401	{object}	object{err=string}
-//	@Failure		409	{object}	object{err=string}
 //	@Failure		500	{object}	object{err=string}
-//	@Router			/api/v1/auth/check [post]
-func (a *AuthHandler) Verify(w http.ResponseWriter, r *http.Request) {
-	auth, err := a.getUserID(r)
-	if auth != 0 {
-		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
-		logs.LogError(logs.Logger, "http", "CheckAuth", err, err.Error())
+//	@Router			/api/v1/auth/confirm [post]
+func (a *AuthHandler) Confirm(w http.ResponseWriter, r *http.Request) {
+
+	var cp domain.ConfirmPair
+	err := json.NewDecoder(r.Body).Decode(&cp)
+	if err != nil {
+		domain.WriteError(w, "somethings wrong with JSON", http.StatusBadRequest)
+		logs.LogError(logs.Logger, "auth/http", "CheckAuth", err, "Failed to decode json from body")
 		return
 	}
+
+	var session domain.Session
+	if session, err = a.AuthUsecase.ConfirmUser(cp); err != nil {
+		domain.WriteError(w, err.Error(), domain.GetStatusCode(err))
+		logs.LogError(logs.Logger, "auth/http", "CheckAuth", err, err.Error())
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_token",
+		Value:    session.Token,
+		Expires:  session.ExpiresAt,
+		Path:     "/",
+		HttpOnly: true,
+	})
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -305,16 +308,13 @@ func generateRandomNumber() (string, error) {
 
 	var randomNumber string
 	for i := 0; i < length; i++ {
-		// Генерируем случайный индекс
 		randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
 		if err != nil {
 			return "", err
 		}
 
-		// Получаем случайную цифру по индексу
 		randomDigit := digits[randomIndex.Int64()]
 
-		// Добавляем цифру к случайной последовательности
 		randomNumber += string(randomDigit)
 	}
 

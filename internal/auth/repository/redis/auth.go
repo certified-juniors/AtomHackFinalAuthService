@@ -69,3 +69,16 @@ func (s *sessionRedisRepository) GetUserID(token string) (string, error) {
 
 	return id, nil
 }
+
+func (s *sessionRedisRepository) GetCodeByID(id string) (string, error) {
+	if id == "" {
+		return "", domain.ErrInvalidToken
+	}
+
+	id, err := s.client.Get(context.Background(), id).Result()
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
+}

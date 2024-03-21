@@ -51,6 +51,11 @@ type SMTPParams struct {
 	DestPassword    string
 }
 
+type ConfirmPair struct {
+	ID   int    `json:"id"`
+	Code string `json:"code"`
+}
+
 type AuthUsecase interface {
 	Login(credentials Credentials) (Session, int, error)
 	Logout(token string) error
@@ -59,6 +64,7 @@ type AuthUsecase interface {
 	GenerateJWT(email string) (string, error)
 	GetByID(id int) (User, error)
 	AddCodeByID(id int, code string) error
+	ConfirmUser(pair ConfirmPair) (Session, error)
 }
 
 type AuthRepository interface {
@@ -66,6 +72,7 @@ type AuthRepository interface {
 	GetByID(id int) (User, error)
 	AddUser(user User) (int, error)
 	UserExists(email string) (bool, error)
+	ConfirmUser(id int) (string, error)
 }
 
 type SessionRepository interface {
@@ -73,4 +80,5 @@ type SessionRepository interface {
 	DeleteByToken(token string) error
 	GetUserID(token string) (string, error)
 	AddCodeByID(id int, code string) error
+	GetCodeByID(id string) (string, error)
 }

@@ -10,7 +10,7 @@ CREATE TABLE "user"
     password    BYTEA NOT NULL UNIQUE,
     name        TEXT  NOT NULL,
     surname     TEXT  NOT NULL,
-    middle_name TEXT  NOT NULL,
+    middle_name TEXT,
     role        TEXT  NOT NULL,
     confirmed   BOOL        DEFAULT FALSE,
     created_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

@@ -9,15 +9,22 @@ import (
 )
 
 const getByEmailQuery = `
-	SELECT id, email, password, name, surname, middle_name, role 
+	SELECT id, email, password, name, surname, middle_name, role, confirmed
 	FROM "user"
 	WHERE email = $1
 `
 
 const getByIdQuery = `
-	SELECT id, email, name, surname, middle_name, role 
+	SELECT id, email, name, surname, middle_name, role, confirmed
 	FROM "user"
 	WHERE id = $1
+`
+
+const updateConfirmedQuery = `
+	UPDATE "user"
+	SET confirmed = true
+	WHERE id = $1
+	RETURNING email
 `
 
 const addUserQuery = `
@@ -58,6 +65,7 @@ func (r *authPostgresqlRepository) GetByEmail(email string) (domain.User, error)
 		&user.Surname,
 		&user.MiddleName,
 		&user.Role,
+		&user.Confirmed,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -85,6 +93,7 @@ func (r *authPostgresqlRepository) GetByID(id int) (domain.User, error) {
 		&user.Surname,
 		&user.MiddleName,
 		&user.Role,
+		&user.Confirmed,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -133,4 +142,27 @@ func (r *authPostgresqlRepository) UserExists(email string) (bool, error) {
 	}
 
 	return exist, nil
+}
+
+func (r *authPostgresqlRepository) ConfirmUser(id int) (string, error) {
+	if id == 0 {
+		return "", domain.ErrBadRequest
+	}
+
+	_, err := r.db.Exec(r.ctx, updateConfirmedQuery, id)
+	if err != nil {
+		logs.LogError(logs.Logger, "auth/postgresql", "ConfirmUser", err, err.Error())
+		return "", err
+	}
+
+	result := r.db.QueryRow(r.ctx, updateConfirmedQuery, id)
+
+	logs.Logger.Debug("updateConfirmedQuery queryRow result:", result)
+
+	var email string
+	if err := result.Scan(&email); err != nil {
+		logs.LogError(logs.Logger, "auth/postgres", "ConfirmUser", err, err.Error())
+		return "", err
+	}
+	return email, nil
 }

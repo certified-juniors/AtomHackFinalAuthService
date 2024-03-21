@@ -80,6 +80,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/auth/confirm": {
+            "post": {
+                "description": "confirm user",
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "confirm user",
+                "parameters": [
+                    {
+                        "description": "user id and verification code",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfirmPair"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "err": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "err": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/login": {
             "post": {
                 "description": "create user session and put it into cookie",
@@ -373,6 +420,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "domain.ConfirmPair": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.Credentials": {
             "type": "object",
             "properties": {
